@@ -1,2 +1,2 @@
 # local_library
-A Django project for local library
+Local library website made with django
