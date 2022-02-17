@@ -2,6 +2,12 @@ from django.shortcuts import render
 from .models import Book, BookInstance, Author, Genre
 from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+import datetime
+
+from .forms import RenewBookForm
 
 
 class LoanedBooksByUserListView(LoginRequiredMixin, generic.ListView):
@@ -64,3 +70,23 @@ def index(request):
                  'num_authors': num_authors,
                  'num_visits': num_visits},
     )
+
+
+@permission_required('catalog.can_mark_returned')
+def renew_book_librarian(request, pk):
+    book_inst = get_object_or_404(BookInstance, pk=pk)
+
+    if request.method == 'POST':
+        form = RenewBookForm(request.POST)
+
+        if form.is_valid():
+            book_inst.due_back = form.cleaned_data['renewal_date']
+            book_inst.save()
+
+            return HttpResponseRedirect(reverse('/'))
+
+    else:
+        proposed_renewal_date = datetime.date.today() + datetime.timedelta(weeks = 3)
+        form = RenewBookForm(initial={'renewal_date': proposed_renewal_date, })
+
+    return render(request, 'catalog/book_renew_librarian.html', context = {'form': form, 'bookinst': book_inst})
