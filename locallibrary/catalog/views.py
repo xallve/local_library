@@ -41,6 +41,10 @@ class AuthorListView(generic.ListView):
     paginate_by = 10
 
 
+class AuthorDetailView(generic.DetailView):
+    model = Author
+
+
 def index(request):
 
     num_books = Book.objects.all().count()
